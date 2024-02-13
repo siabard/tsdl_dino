@@ -1,0 +1,59 @@
+* 프로젝트 초기 설정하기
+
+** 프로젝트 설정
+
+=opam= 으로 필요 라이브러리를 설치하고, =dune= 을 이용해서 프로젝트를 구성한다.
+
+#+BEGIN_SRC bash
+
+  opam install tsdl
+  dune init project tsdl_dino
+  
+#+END_SRC
+
+=.gitignore= 에 빌드시 생성되는 내역과 =opam= 관련 디렉토리를 추가한다.
+
+#+BEGIN_SRC
+
+  _build/
+  _opam/
+
+#+END_SRC
+
+** executable 설정
+
+#+BEGIN_SRC
+
+  (executable
+    (public_name tsdl_dino)
+    (name main)
+    (libraries tsdl_dino tsdl))
+  
+#+END_SRC
+
+위와 같이 =tsdl= 의 의존성을 추가한다.
+
+** =bin/main.ml= 구성
+
+#+BEGIN_SRC ocaml
+
+  open Tsdl
+
+
+  let main () = match Sdl.init Sdl.Init.(video + events) with
+  | Error (`Msg e) -> Sdl.log "Init error: %s" e; exit 1
+  | Ok () ->
+      match Sdl.create_window ~w:640 ~h:480 "SDL OpenGL" Sdl.Window.opengl with
+      | Error (`Msg e) -> Sdl.log "Create window error: %s" e; exit 1
+      | Ok w ->
+	  Sdl.pump_events ();
+	  Sdl.delay 3000l;
+	  Sdl.destroy_window w;
+	  Sdl.quit ();
+	  exit 0
+
+  let () = main ()
+    
+#+END_SRC
+
+이제 위와 같은 코드를 추가하고 실행한다.
