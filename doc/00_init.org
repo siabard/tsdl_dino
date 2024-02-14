@@ -1,10 +1,15 @@
+#+BLOG: myblog
+#+POSTID: 983
+#+DATE: [2024-02-13 Tue 10:16]
+#+TITLE: 프로젝트 초기 설정하기
+
 * 프로젝트 초기 설정하기
 
 ** 프로젝트 설정
 
 =opam= 으로 필요 라이브러리를 설치하고, =dune= 을 이용해서 프로젝트를 구성한다.
 
-#+BEGIN_SRC bash
+#+BEGIN_SRC
 
   opam install tsdl
   dune init project tsdl_dino
@@ -35,7 +40,7 @@
 
 ** =bin/main.ml= 구성
 
-#+BEGIN_SRC ocaml
+#+BEGIN_SRC
 
   open Tsdl
 

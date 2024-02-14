@@ -1,6 +1,15 @@
-open Tsdl
+#+BLOG: myblog
+#+POSTID: 991
+#+DATE: [2024-02-14 Wed 12:27]
+#+TITLE: TSDL로 게임만들기 #2
 
+* 이벤트 루프
 
+** 이벤트 관리용 모듈 추가
+
+#+BEGIN_SRC
+
+  
 module Event = struct
   type t =
     | Quit
@@ -12,18 +21,19 @@ module Event = struct
     | `Quit -> Quit
     | _ -> NoEvent
 end 
+  
+#+END_SRC
+
+** 전체 Main에 =poll_event= 를 이용한 이벤트 루프 추가
+
+#+BEGIN_SRC
 
 let main () = match Sdl.init Sdl.Init.(video + events) with
 | Error (`Msg e) -> Sdl.log "Init error: %s" e; exit 1
 | Ok () ->
   let event = Sdl.Event.create () in
   let some_event = Some event in
-    match Sdl.create_window ~w:640 ~h:480 "SDL OpenGL" Sdl.Window.opengl with
-    | Error (`Msg e) -> Sdl.log "Create window error: %s" e; exit 1
-    | Ok w ->
-      match Sdl.create_renderer ~flags:Sdl.Renderer.(accelerated + presentvsync + targettexture) w with
-      | Error (`Msg e) -> Sdl.log "Create renderer error: %s" e; exit 1
-      | Ok r -> 
+    ...
         let rec event_loop () =
           let event =
             if Sdl.poll_event some_event then Event.of_sdl event else Event.NoEvent
@@ -43,4 +53,4 @@ let main () = match Sdl.init Sdl.Init.(video + events) with
         in
         event_loop ()
 
-let () = main ()
+#+END_SRC

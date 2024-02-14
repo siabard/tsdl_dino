@@ -1,0 +1,43 @@
+#+BLOG: myblog
+#+POSTID: 995
+#+DATE: [2024-02-14 Wed 14:02]
+#+TITLE: TSDL로 게임만들기 #3 Renderer
+#+CATEGORY: OCaml, SDL
+#+TAGS: OCaml, sdl2
+* Renderer를 이용한 출력
+
+** Renderer 생성
+
+=renderer= 는 =window= 를 통해 생성한다. 이 때 =flags= 를 통해 옵션을 받는다.
+
+#+BEGIN_SRC
+   match Sdl.create_window ~w:640 ~h:480 "SDL OpenGL" Sdl.Window.opengl with
+    | Error (`Msg e) -> Sdl.log "Create window error: %s" e; exit 1
+    | Ok w ->
+      match Sdl.create_renderer ~flags:Sdl.Renderer.(accelerated + presentvsync + targettexture) w with
+      | Error (`Msg e) -> Sdl.log "Create renderer error: %s" e; exit 1
+      | Ok r -> 
+#+END_SRC
+
+이 부분에서 =Sdl.Renderer.(accelerated + presentvsync + targettexture)= 이 랜더러 옵션을 넣는 부분이다.
+
+
+** Renderer 를 이용한 화면 출력
+
+생성된 Renderer를 event loop의 idle 상황에서 사용하여 출력한다.
+
+#+BEGIN_SRC
+
+          match event with
+          ...
+          | _ ->
+            Sdl.delay 300l;
+            ignore(Sdl.set_render_draw_color r 0x50 0xc8 0x78 0xff);
+            ignore(Sdl.render_clear r);
+            Sdl.render_present r;
+            event_loop ()
+
+  
+#+END_SRC
+
+위에서 보이듯 =event= 가 별도의 처리를 하지 않을 때 화면에 해당 renderer를 출력한다.
