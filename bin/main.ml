@@ -19,7 +19,7 @@ let main () = match Sdl.init Sdl.Init.(video + events) with
   let last_tick = ref (!current_tick) in
   let event = Sdl.Event.create () in
   let some_event = Some event in
-    match Sdl.create_window ~w:Tsdl_dino.Setup.Setup.window_width ~h:Tsdl_dino.Setup.Setup.window_height "SDL OpenGL" Sdl.Window.shown with
+    match Sdl.create_window ~w:Tsdl_dino.Setup.Setup.window_width ~h:Tsdl_dino.Setup.Setup.window_height "SDL OpenGL" Sdl.Window.(shown + opengl) with
     | Error (`Msg e) -> Sdl.log "Create window error: %s" e; exit 1
     | Ok w ->
       match Sdl.create_renderer ~flags:Sdl.Renderer.(accelerated + targettexture) w with
