@@ -1,5 +1,3 @@
-open Tsdl
-    
 module Setup = struct
   let window_width :int = 800
     
@@ -21,15 +19,20 @@ module GameMap = struct
                   [1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1];
                  ]
 
-  let world_map = Hashtbl.create ((List.length mini_map) * (List.(length (hd mini_map))))
+  let (world_map: Ecs.Entity.t list ref) = ref []
+
 
   let get_map () =
     for y = 0 to List.length mini_map - 1 do
       for x = 0 to List.(length (nth mini_map y))- 1 do
-        let coord = (x, y) in
         let value = List.(nth (nth mini_map y) x) in
         if value > 0 then 
-          Hashtbl.add world_map coord value
+          let entity:Ecs.entity = {
+            tag = "map";
+            pos = Some { x = x*50; y = y*50};
+            shape = Some {width = 50; height = 50}
+          } in
+          world_map := entity :: (!world_map)
         else
           ()
       done
@@ -37,10 +40,10 @@ module GameMap = struct
 
   
   let render_map renderer =
-    Hashtbl.iter (fun coord _  ->
-        let rect = Some(Sdl.Rect.create ~x:((fst coord)*50) ~y:((snd coord)*50) ~w:50 ~h:50) in
-        ignore(Sdl.render_draw_rect renderer rect)
-      ) world_map
+    let map_entity = Ecs.Entity.of_tag "map" !world_map in
+    let position_entity = Ecs.Entity.with_component Position map_entity in
+    let shape_entity = Ecs.Entity.with_component Shape position_entity in
+    Ecs.System2D.render renderer shape_entity
     
       
 
