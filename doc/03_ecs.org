@@ -1,0 +1,256 @@
+#+BLOG: myblog
+#+POSTID: 1001
+#+TITLE: tsdl로 게임만들기 #4 ECS 구성하기 
+#+DATE: [2024-02-19 Mon 14:29]
+#+CATEGORY: OCaml, SDL
+#+TAGS: OCaml, sdl2
+
+* ECS
+
+** Entity
+
+Entity는 객체를 표현한다. 각 객체는 고유한 ID를 지니고 있다. 
+
+해당 객체는 다음고 같이 표현했다.
+
+#+BEGIN_SRC
+
+
+type entity =  {
+    tag: string;
+    pos: position_component option;
+    shape: shape_component option;
+}  
+
+#+END_SRC
+
+위에서 처럼 =tag= 로 Entity의 종류를 설정하고, 포함할 수 있는 컴포넌트를 정의했다. 모든 Component가 Entity에 포함되는 것은 아니므로 =option= 으로 설정했다.
+
+** Component
+
+Component는 Entity의 특정 성질을 표현하는 데이터 모델이다. 체력을 가진다거나, 위치를 가진다는 것처럼, 다양한 정보를 담는다.
+
+위에서 설정한 두가지 Component는 다음과 같이 정의했다.
+
+#+BEGIN_SRC
+
+
+type position_component =
+  {
+    x: int;
+    y: int;
+       
+  }
+
+
+type shape_component =
+  {
+    width: int;
+    height: int;
+  }
+
+
+#+END_SRC
+
+** System
+
+시스템은 모든 Entity에 대해 대상으로하는 Component를 읽어들여 다양한 동작을 일으키게한다. 예를 들어 화면에 노출하기위해서는 위치와 그 크기를 알고 있어야한다. 위에서 정의한 =position_component= 와 =shape_component= 가 모두 필요하다.
+
+
+#+BEGIN_SRC
+
+
+  let render (renderer: Sdl.renderer ) (entities: entity list): unit =
+    List.iter (fun ele ->
+        match ele.pos with
+        | Some {x; y} -> (
+          match ele.shape with
+          | Some {width; height} ->
+            let rect = Sdl.Rect.create ~x:x ~y:y ~w:width ~h: height in
+            let _ = Sdl.render_draw_rect renderer (Some rect) in
+            ()
+          | None -> ()
+        )
+        | None -> ()
+      ) entities
+  
+#+END_SRC
+
+해당 컴포넌트가 존재하는 경우에만 실제 Rendering 을 하도록했다.
+
+** Entity의 생성과 삭제
+
+Entity의 생성은 다음과 같이 한다.
+
+#+BEGIN_SRC
+
+
+module Entities = struct
+
+  type t = entity list
+
+  let unique_id: int ref = ref 0
+
+  let entities  = ref IntMap.empty 
+
+  let add_entity tag =
+    unique_id := !unique_id + 1;
+    let new_entity = {
+      id = !unique_id;
+      tag = tag;
+      pos = None;
+      shape = None;
+    } in
+    entities := IntMap.add !unique_id new_entity !entities;
+    new_entity
+
+  ...
+end
+#+END_SRC
+
+위에서 보는 것처럼 각각의 entity에 고유한 ID를 주어 생성한다. 생성한 entity에 position, shape 정보는 별도의 함수로 처리한다.
+
+#+BEGIN_SRC
+
+
+module Entities = struct
+
+...
+
+
+  let update_position (id:int) (new_position: position_component) =
+    match IntMap.find_opt id !entities with
+    | Some e ->
+      let new_entity = {
+        id = e.id;
+        tag = e.tag;
+        pos = Some new_position;
+        shape = e.shape;
+      } in
+      entities := IntMap.add id new_entity !entities;
+    | None -> ()
+
+  let update_shape (id: int) (new_shape: shape_component) = 
+   match IntMap.find_opt id !entities with
+    | Some e ->
+      let new_entity = {
+        id = e.id;
+        tag = e.tag;
+        pos = e.pos;
+        shape = Some new_shape;
+      } in
+      entities := IntMap.add id new_entity !entities;
+    | None -> ()
+    
+...
+
+
+end
+
+#+END_SRC
+
+주어진 =id= 와 일치하는 entity가 있다면, 해당 entity를 업데이트한다.
+
+** 이동 , 렌더링 시스템
+
+해당하는 시스템은 다음과 같다.
+
+#+BEGIN_SRC
+
+
+
+module System2D = struct
+  let update_pos (entities: Entities.t): unit =
+    List.iter (fun ele ->
+        let id = ele.id in 
+        let pos = ele.pos in
+        match pos with
+        | Some pos ->
+        let new_pos = { x = pos.x + 1; y = pos.y} in
+        Entities.update_position id new_pos
+        | None -> ()
+      ) entities
+
+  
+  let render (renderer: Sdl.renderer ) (entities: Entities.t): unit =
+    List.iter (fun ele ->
+        match ele.pos with
+        | Some {x; y} -> (
+          match ele.shape with
+          | Some {width; height} ->
+            let rect = Sdl.Rect.create ~x:x ~y:y ~w:width ~h: height in
+            let _ = Sdl.render_draw_rect renderer (Some rect) in
+            ()
+          | None -> ()
+        )
+        | None -> ()
+      ) entities
+end
+
+
+
+#+END_SRC
+
+해당하는 Entity 리스트를 받아서 이를 시스템에 넣는 구조이다. 해당하는 Entity 리스트만 필터링하는 메서드는 =tag= 와 component에 따라 다음과 같다.
+
+#+BEGIN_SRC
+
+type component_class =
+  | Position
+  | Shape
+    
+module Entities = struct
+
+  ...
+
+  let of_tag tag entities = List.filter (fun ele-> ele.tag = tag) entities
+
+  let with_component comp entities =
+    match comp with
+        | Position -> List.filter (fun ele -> ele.pos <> None) entities
+        | Shape -> List.filter (fun ele -> ele.shape <> None) entities
+       
+  
+end
+
+
+#+END_SRC
+
+
+이제 실제로 사용하는 예는 다음과 같다.
+
+#+BEGIN_SRC
+
+        let rec event_loop () =
+          let event =
+            if Sdl.poll_event some_event then Event.of_sdl event else Event.NoEvent
+          in 
+          match event with
+          | Event.Quit ->
+            Sdl.destroy_renderer r;
+            Sdl.destroy_window w;
+            Sdl.quit ();
+            exit 0
+          | _ ->
+            last_tick := !current_tick ;
+            
+            ignore(Sdl.set_render_draw_color r 0x10 0x10 0x10 0xff);
+            ignore(Sdl.render_clear r);
+            ignore(Sdl.set_render_draw_color r 0xff 0xff 0xff 0xff);
+            Tsdl_dino.Setup.GameMap.update_map ();
+            Tsdl_dino.Setup.GameMap.render_map r;
+            Sdl.render_present r;
+            current_tick := Sdl.get_ticks();
+            let dt = Int32.sub !current_tick !last_tick in 
+            if Int32.(compare dt 33l) < 0 then
+              Sdl.delay(Int32.(sub 33l dt))
+            else
+              ();
+            event_loop ()
+        in
+        event_loop ()
+  
+
+#+END_SRC
+
+=event_loop= 에서 =GameMap= 의 =update_map= 과 =render_map= 을 호출하는 것을 볼 수 있다. 이런 식으로 간단한 ECS를 구성할 수 있다.
