@@ -1,6 +1,3 @@
-#+BLOG: myblog
-#+POSTID: 1005
-#+DATE: [2024-02-19 Mon 14:31]
 open Tsdl
 
 module Event = struct
