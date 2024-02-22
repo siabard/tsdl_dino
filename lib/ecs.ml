@@ -46,13 +46,7 @@ module Entities = struct
     | Some e ->
         let new_entity =
           {
-            id = e.id;
-            tag = e.tag;
-            pos = e.pos;
-            shape = e.shape;
-            transform = e.transform;
-            rotation = e.rotation;
-            cinput = Some new_cinput;
+            e with cinput = Some new_cinput
           }
         in
         entities := IntMap.add id new_entity !entities;
@@ -64,13 +58,7 @@ module Entities = struct
     | Some e ->
         let new_entity =
           {
-            id = e.id;
-            tag = e.tag;
-            pos = e.pos;
-            shape = e.shape;
-            transform = Some new_transform;
-            rotation = e.rotation;
-            cinput = e.cinput;
+            e with transform = Some new_transform
           }
         in
         entities := IntMap.add id new_entity !entities;
@@ -82,13 +70,7 @@ module Entities = struct
     | Some e ->
         let new_entity =
           {
-            id = e.id;
-            tag = e.tag;
-            pos = Some new_position;
-            shape = e.shape;
-            transform = e.transform;
-            rotation = e.rotation;
-            cinput = e.cinput;
+            e with pos = Some new_position
           }
         in
         entities := IntMap.add id new_entity !entities;
@@ -100,13 +82,7 @@ module Entities = struct
     | Some e ->
         let new_entity =
           {
-            id = e.id;
-            tag = e.tag;
-            pos = e.pos;
-            shape = Some new_shape;
-            transform = e.transform;
-            rotation = e.rotation;
-            cinput = e.cinput;
+            e with shape = Some new_shape
           }
         in
         entities := IntMap.add id new_entity !entities
@@ -128,18 +104,16 @@ module System2D = struct
         let id = ele.id in
         let transform = ele.transform in
         let cinput = ele.cinput in
-        match cinput with
-        | Some _ -> (
+        match cinput, transform with
+        | Some _, Some _ -> (
             match Hashtbl.find_opt Event.Event.hold_key Event.Event.W with
             | Some _ -> (
-                match transform with
-                | Some _ ->
                     let new_transform = { dx = 1.0; dy = 1.0 } in
                     Entities.update_transform id new_transform
-                | _ -> ())
+                  )
             | _ -> ();                   
-          )
-        | None -> ())
+          )                  
+        | _ , _-> ())
       entities
 
   let update_pos (entities : Entities.t) : unit =
@@ -148,32 +122,28 @@ module System2D = struct
         let id = ele.id in
         let pos = ele.pos in
         let transform = ele.transform in
-        match pos with
-        | Some pos -> (
-            match transform with
-            | Some transform ->
+        match pos, transform with
+        | Some pos, Some transform -> (
                 let new_pos =
                   { x = pos.x +. transform.dx; y = pos.y +. transform.dy }
                 in
                 Entities.update_position id new_pos
-            | None -> ())
-        | None -> ())
+              )
+        | _, _ -> ())
       entities
 
   let render (renderer : Sdl.renderer) (entities : Entities.t) : unit =
     List.iter
       (fun ele ->
-        match ele.pos with
-        | Some { x; y } -> (
-            match ele.shape with
-            | Some { width; height } ->
+        match ele.pos, ele.shape with
+        | Some { x; y }, Some {width; height}  -> (
                 let rect =
                   Sdl.Rect.create ~x:(int_of_float x) ~y:(int_of_float y)
                     ~w:(int_of_float width) ~h:(int_of_float height)
                 in
                 let _ = Sdl.render_draw_rect renderer (Some rect) in
                 ()
-            | None -> ())
-        | None -> ())
+              )
+        | _ , _ -> ())
       entities
 end
