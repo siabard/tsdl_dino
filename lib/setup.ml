@@ -39,7 +39,7 @@ module GameMap = struct
   let set_player () =
     let new_entity = Ecs.Entities.add_entity "player" in
     let (pos : Ecs.position_component) = { x = 1.5 *. 50.0; y = 2. *. 50. } in
-    let (transform: Ecs.transform_component) = {dx = 0.; dy = 0.} in 
+    let (transform : Ecs.transform_component) = { dx = 0.; dy = 0. } in
     let (shape : Ecs.shape_component) = { width = 10.0; height = 10.0 } in
     let (cinput : Ecs.input_component) = { enabled = true } in
     Ecs.Entities.update_position new_entity.id pos;

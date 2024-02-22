@@ -44,11 +44,7 @@ module Entities = struct
   let update_cinput id new_cinput =
     match IntMap.find_opt id !entities with
     | Some e ->
-        let new_entity =
-          {
-            e with cinput = Some new_cinput
-          }
-        in
+        let new_entity = { e with cinput = Some new_cinput } in
         entities := IntMap.add id new_entity !entities;
         ()
     | None -> ()
@@ -56,11 +52,7 @@ module Entities = struct
   let update_transform id new_transform =
     match IntMap.find_opt id !entities with
     | Some e ->
-        let new_entity =
-          {
-            e with transform = Some new_transform
-          }
-        in
+        let new_entity = { e with transform = Some new_transform } in
         entities := IntMap.add id new_entity !entities;
         ()
     | None -> ()
@@ -68,11 +60,7 @@ module Entities = struct
   let update_position (id : int) (new_position : position_component) =
     match IntMap.find_opt id !entities with
     | Some e ->
-        let new_entity =
-          {
-            e with pos = Some new_position
-          }
-        in
+        let new_entity = { e with pos = Some new_position } in
         entities := IntMap.add id new_entity !entities;
         ()
     | None -> ()
@@ -80,11 +68,7 @@ module Entities = struct
   let update_shape (id : int) (new_shape : shape_component) =
     match IntMap.find_opt id !entities with
     | Some e ->
-        let new_entity =
-          {
-            e with shape = Some new_shape
-          }
-        in
+        let new_entity = { e with shape = Some new_shape } in
         entities := IntMap.add id new_entity !entities
     | None -> ()
 
@@ -104,16 +88,14 @@ module System2D = struct
         let id = ele.id in
         let transform = ele.transform in
         let cinput = ele.cinput in
-        match cinput, transform with
+        match (cinput, transform) with
         | Some _, Some _ -> (
             match Hashtbl.find_opt Event.Event.hold_key Event.Event.W with
-            | Some _ -> (
-                    let new_transform = { dx = 1.0; dy = 1.0 } in
-                    Entities.update_transform id new_transform
-                  )
-            | _ -> ();                   
-          )                  
-        | _ , _-> ())
+            | Some _ ->
+                let new_transform = { dx = 1.0; dy = 1.0 } in
+                Entities.update_transform id new_transform
+            | _ -> ())
+        | _, _ -> ())
       entities
 
   let update_pos (entities : Entities.t) : unit =
@@ -122,28 +104,26 @@ module System2D = struct
         let id = ele.id in
         let pos = ele.pos in
         let transform = ele.transform in
-        match pos, transform with
-        | Some pos, Some transform -> (
-                let new_pos =
-                  { x = pos.x +. transform.dx; y = pos.y +. transform.dy }
-                in
-                Entities.update_position id new_pos
-              )
+        match (pos, transform) with
+        | Some pos, Some transform ->
+            let new_pos =
+              { x = pos.x +. transform.dx; y = pos.y +. transform.dy }
+            in
+            Entities.update_position id new_pos
         | _, _ -> ())
       entities
 
   let render (renderer : Sdl.renderer) (entities : Entities.t) : unit =
     List.iter
       (fun ele ->
-        match ele.pos, ele.shape with
-        | Some { x; y }, Some {width; height}  -> (
-                let rect =
-                  Sdl.Rect.create ~x:(int_of_float x) ~y:(int_of_float y)
-                    ~w:(int_of_float width) ~h:(int_of_float height)
-                in
-                let _ = Sdl.render_draw_rect renderer (Some rect) in
-                ()
-              )
-        | _ , _ -> ())
+        match (ele.pos, ele.shape) with
+        | Some { x; y }, Some { width; height } ->
+            let rect =
+              Sdl.Rect.create ~x:(int_of_float x) ~y:(int_of_float y)
+                ~w:(int_of_float width) ~h:(int_of_float height)
+            in
+            let _ = Sdl.render_draw_rect renderer (Some rect) in
+            ()
+        | _, _ -> ())
       entities
 end
