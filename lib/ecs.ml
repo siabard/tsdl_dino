@@ -6,7 +6,7 @@ type position_component = { x : float; y : float }
 type shape_component = { width : float; height : float }
 type rotation_component = { speed : float; angle : float }
 type input_component = { enabled : bool }
-
+type collision_component = { center_x: float; center_y: float; width: float; height: float;}
 type entity = {
   id : int;
   tag : string;
@@ -15,6 +15,7 @@ type entity = {
   shape : shape_component option;
   rotation : rotation_component option;
   cinput : input_component option;
+  collider: collision_component option;
 }
 
 module IntMap = Map.Make (Int)
@@ -36,6 +37,7 @@ module Entities = struct
         transform = None;
         rotation = None;
         cinput = None;
+        collider = None;
       }
     in
     entities := IntMap.add !unique_id new_entity !entities;
@@ -72,6 +74,13 @@ module Entities = struct
         entities := IntMap.add id new_entity !entities
     | None -> ()
 
+  let update_collider (id: int) (new_collider: collision_component) =
+    match IntMap.find_opt id !entities with
+    | Some e ->
+      let new_entity = { e with collider = Some new_collider} in
+      entities := IntMap.add id new_entity !entities
+    | None -> ()
+  
   let of_tag tag entities = List.filter (fun ele -> ele.tag = tag) entities
 
   let with_component comp entities =
