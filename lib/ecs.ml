@@ -28,7 +28,7 @@ type entity = {
 module IntMap = Map.Make (Int)
 
 module Entities = struct
-  type t = entity list
+  type t = entity
 
   let unique_id : int ref = ref 0
 
@@ -49,7 +49,7 @@ module Entities = struct
     entities := IntMap.add !unique_id new_entity !entities;
     new_entity
 
-  let get_list entities = IntMap.bindings entities |> List.map snd
+  let get_list entities = IntMap.bindings !entities |> List.map snd
 
   let update_cinput entities id new_cinput =
     match IntMap.find_opt id !entities with
@@ -91,10 +91,12 @@ module Entities = struct
         ()
     | None -> ()
 
-  let of_tag tag entity_list =
+  let of_tag entities tag =
+    let entity_list = get_list entities in
     List.filter (fun ele -> ele.tag = tag) entity_list
 
-  let with_component entity_list comp =
+  let with_component entities comp =
+    let entity_list = get_list !entities in
     match comp with
     | Position -> List.filter (fun ele -> ele.pos <> None) entity_list
     | Shape -> List.filter (fun ele -> ele.shape <> None) entity_list
@@ -102,29 +104,33 @@ module Entities = struct
 end
 
 module System2D = struct
+  type t = entity list
+
   let update_input entities =
-    let entity_list = Entities.get_list !entities in
-    let new_transform = ref {dx = 0.0; dy = 0.0} in
+    let entity_list = Entities.get_list entities in
+    let new_transform = ref { dx = 0.0; dy = 0.0 } in
     List.iter
       (fun ele ->
         let id = ele.id in
         let transform = ele.transform in
         let cinput = ele.cinput in
         match (cinput, transform) with
-        | Some _, Some _ -> (
-            match Hashtbl.find_opt Event.Event.hold_key Event.Event.W with
+        | Some _, Some _ ->
+            (match Hashtbl.find_opt Event.Event.hold_key Event.Event.W with
             | Some 1 ->
-              new_transform := {dx = !new_transform.dx +. 1.0; dy = !new_transform.dy +. 1.0 };
-              ()
+                new_transform :=
+                  {
+                    dx = !new_transform.dx +. 1.0;
+                    dy = !new_transform.dy +. 1.0;
+                  };
+                ()
             | _ -> ());
-          Entities.update_transform entities id !new_transform
-              
-        | _, _ -> ()
-      )
+            Entities.update_transform entities id !new_transform
+        | _, _ -> ())
       entity_list
 
   let update_pos entities =
-    let entity_list = Entities.get_list !entities in
+    let entity_list = Entities.get_list entities in
     List.iter
       (fun ele ->
         let id = ele.id in
@@ -140,7 +146,7 @@ module System2D = struct
       entity_list
 
   let render entities renderer =
-    let entity_list = Entities.get_list !entities in
+    let entity_list = Entities.get_list entities in
     List.iter
       (fun ele ->
         match (ele.pos, ele.shape) with

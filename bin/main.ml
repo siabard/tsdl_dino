@@ -2,18 +2,12 @@ open Tsdl
 module Event = Tsdl_dino.Event.Event
 
 let main () =
-  let mini_map =
-    [
-      [ 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1 ];
-      [ 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1 ];
-      [ 1; 0; 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1 ];
-      [ 1; 0; 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1; 0; 0; 1 ];
-      [ 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1; 0; 0; 1 ];
-      [ 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1 ];
-      [ 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1 ];
-    ]
-  in
-  let entities = ref Tsdl_dino.Ecs.IntMap.empty in
+  let mini_map = Tsdl_dino.Globals.mini_map in
+  let map_height = List.length mini_map in
+  let map_width = List.(length (hd mini_map)) in
+  let map_list = List.flatten mini_map in
+  let map_info = Tsdl_dino.Globals.map_info in
+  let entities = Tsdl_dino.Globals.entities in
   match Sdl.init Sdl.Init.(video + events) with
   | Error (`Msg e) ->
       Sdl.log "Init error: %s" e;
@@ -41,7 +35,9 @@ let main () =
               Sdl.log "Create renderer error: %s" e;
               exit 1
           | Ok r ->
-              Tsdl_dino.Setup.GameMap.get_map entities mini_map;
+              Tsdl_dino.Setup.GameMap.set_map map_info
+                { map_width; map_height; map_list };
+              Tsdl_dino.Setup.GameMap.get_map entities map_info;
               Tsdl_dino.Setup.GameMap.set_player entities;
               let rec game_loop () =
                 ignore (Tsdl_dino.Event.Event.clear_key ());
@@ -64,7 +60,6 @@ let main () =
                       Hashtbl.replace Event.released_key key 1;
                       Hashtbl.remove Event.hold_key key)
                 | _ -> ());
-
 
                 Tsdl_dino.Setup.GameMap.update_map entities;
                 ignore (Sdl.set_render_draw_color r 0x10 0x10 0x10 0xff);
