@@ -35,6 +35,7 @@ let main () =
               Sdl.log "Create renderer error: %s" e;
               exit 1
           | Ok r ->
+              ignore (Sdl.set_hint Sdl.Hint.render_scale_quality "linear"); 
               Tsdl_dino.Setup.GameMap.set_map map_info
                 { map_width; map_height; map_list };
               Tsdl_dino.Setup.GameMap.get_map entities map_info;
