@@ -51,9 +51,9 @@ module GameMap = struct
     Ecs.Entities.update_transform entities new_entity.id transform;
     ()
 
-  let update_map entities =
+  let update entities =
     Ecs.System2D.update_input entities;
     Ecs.System2D.update_pos entities
 
-  let render_map entities renderer = Ecs.System2D.render entities renderer
+  let render entities renderer = Ecs.System2D.render entities renderer
 end

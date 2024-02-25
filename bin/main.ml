@@ -61,11 +61,11 @@ let main () =
                       Hashtbl.remove Event.hold_key key)
                 | _ -> ());
 
-                Tsdl_dino.Setup.GameMap.update_map entities;
+                Tsdl_dino.Setup.GameMap.update entities;
                 ignore (Sdl.set_render_draw_color r 0x10 0x10 0x10 0xff);
                 ignore (Sdl.render_clear r);
                 ignore (Sdl.set_render_draw_color r 0xff 0xff 0xff 0xff);
-                Tsdl_dino.Setup.GameMap.render_map entities r;
+                Tsdl_dino.Setup.GameMap.render entities r;
                 Sdl.render_present r;
                 current_tick := Sdl.get_ticks ();
                 let dt = Int32.sub !current_tick !last_tick in
