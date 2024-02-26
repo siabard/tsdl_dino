@@ -1,4 +1,4 @@
 (executable
  (public_name tsdl_dino)
  (name main)
- (libraries tsdl_dino tsdl))
+ (libraries tsdl_dino tsdl tsdl-image))

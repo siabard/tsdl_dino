@@ -2,4 +2,4 @@
 
 (library
  (name tsdl_dino)
- (libraries tsdl))
+ (libraries tsdl tsdl-image))

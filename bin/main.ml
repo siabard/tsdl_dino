@@ -1,4 +1,5 @@
 open Tsdl
+open Tsdl_image
 module Event = Tsdl_dino.Event.Event
 
 let main () =
@@ -13,6 +14,7 @@ let main () =
       Sdl.log "Init error: %s" e;
       exit 1
   | Ok () -> (
+      ignore Image.Init.(jpg + png);
       let current_tick = ref (Sdl.get_ticks ()) in
       let last_tick = ref !current_tick in
       let event = Sdl.Event.create () in
@@ -35,9 +37,11 @@ let main () =
               Sdl.log "Create renderer error: %s" e;
               exit 1
           | Ok r ->
-              ignore (Sdl.set_hint Sdl.Hint.render_scale_quality "linear"); 
+              ignore (Sdl.set_hint Sdl.Hint.render_scale_quality "linear");
               Tsdl_dino.Setup.GameMap.set_map map_info
                 { map_width; map_height; map_list };
+              Tsdl_dino.Textures.add_textures r Tsdl_dino.Globals.assets
+                "assets/hangul.png" "hangul";
               Tsdl_dino.Setup.GameMap.get_map entities map_info;
               Tsdl_dino.Setup.GameMap.set_player entities;
               let rec game_loop () =
@@ -49,8 +53,10 @@ let main () =
                 in
                 (match event with
                 | Event.Quit ->
+                    Tsdl_dino.Textures.clear_assets !Tsdl_dino.Globals.assets;
                     Sdl.destroy_renderer r;
                     Sdl.destroy_window w;
+                    Image.quit ();
                     Sdl.quit ();
                     exit 0
                 | Event.Key { key; down } ->
@@ -66,6 +72,16 @@ let main () =
                 ignore (Sdl.set_render_draw_color r 0x10 0x10 0x10 0xff);
                 ignore (Sdl.render_clear r);
                 ignore (Sdl.set_render_draw_color r 0xff 0xff 0xff 0xff);
+
+                let hangul_asset =
+                  Tsdl_dino.Textures.StringMap.find "hangul"
+                    !Tsdl_dino.Globals.assets
+                in
+                (match hangul_asset with
+                | { texture = Some texture } ->
+                  Tsdl_dino.Bitmap_font.draw_hangul_string r texture (Tsdl_dino.Bitmap_font.utf8_to_ucs2 "안녕하세요") 20 120
+                  
+                | _ -> ());
                 Tsdl_dino.Setup.GameMap.render entities r;
                 Sdl.render_present r;
                 current_tick := Sdl.get_ticks ();

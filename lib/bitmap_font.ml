@@ -1,3 +1,5 @@
+open Tsdl
+
 let utf8_to_ucs2 (utf8_str : string) : int list =
   let rec utf8_to_chars str idx acc =
     if idx >= String.length str then List.rev acc
@@ -93,3 +95,46 @@ let jaso_to_bul johab =
              then Some 3
              else None);
         }
+
+
+let draw_hangul renderer texture charcode x y =
+  let han_width = 16 in
+  let han_height = 16 in
+  let jaso = charcode_to_han_jaso charcode in
+  let bul = jaso_to_bul jaso in
+  let cho_rect =
+    match bul.cho_bul with
+    | Some bul ->
+      Sdl.Rect.create ~x:(jaso.cho * han_width) ~y:(bul * han_height) ~w:han_width ~h:han_height
+    | None ->
+      Sdl.Rect.create ~x:0 ~y:0 ~w:0 ~h:0
+  in
+  let mid_rect =
+    match bul.mid_bul with
+    | Some bul ->
+      Sdl.Rect.create ~x:(jaso.mid * han_width) ~y:((bul + 8) * han_height) ~w:han_width ~h:han_height
+    | None ->
+      Sdl.Rect.create ~x:0 ~y:0 ~w:0 ~h:0
+     
+  in
+  let jong_rect =
+    match bul.jong_bul with
+    | Some bul ->
+      Sdl.Rect.create ~x:(jaso.jong * han_width) ~y:((bul + 12) * han_height) ~w:han_width ~h:han_height
+    | None ->
+      Sdl.Rect.create ~x:0 ~y:0 ~w:0 ~h:0
+  in
+  let dest_rect = Sdl.Rect.create ~x:x ~y:y ~w:han_width ~h:han_height
+  in
+  
+  ignore (Sdl.render_copy_ex ~src:cho_rect ~dst:dest_rect renderer texture 0.0 None Sdl.Flip.none);
+  ignore (Sdl.render_copy_ex ~src:mid_rect ~dst:dest_rect renderer texture 0.0 None Sdl.Flip.none);
+  ignore (Sdl.render_copy_ex ~src:jong_rect ~dst:dest_rect renderer texture 0.0 None Sdl.Flip.none);
+  ()
+
+
+let draw_hangul_string renderer textures charcodes x y =
+  let han_width = 16 in
+  List.iteri (fun idx charcode ->
+      draw_hangul renderer textures charcode (x + idx * han_width) y
+    ) charcodes
