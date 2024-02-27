@@ -1,4 +1,72 @@
-open Tsdl
+#+BLOG: myblog
+#+POSTID: 1014
+#+DATE: [2024-02-27 Tue 11:54]
+#+TITLE: tsdl로 게임 만들기 #6 한글/아스키코드 비트맵 출력하기
+#+CATEGORY: OCaml, SDL
+#+TAGS: OCaml, sdl2
+
+* 비트맵 폰트 출력하기
+
+비트맵으로 구성된 폰트를 출력해보자. 소스의 =assets/= 에는 아스키코드와 한글 조합코드를 위한 =ascii.png= 와 =hangul.png= 파일이 있다. 이 중 한글 조합코드는 8x4x4 벌의 도깨비 폰트에서 가져왔다.
+
+** 애셋 관리
+
+해당 파일을 관리하기위한 애셋 관리 코드를 먼저 작성한다.
+
+애셋 모음을 관리하기위한 맵은 다음과 같다.
+
+#+BEGIN_SRC
+
+(** textures.ml 에 아래 코드 삽입 *)
+module StringMap = Map.Make (String)
+
+type tassets = { texture : Sdl.texture option }
+
+
+(** globals.ml 에 아래 코드 삽입 *)
+let assets : Textures.tassets Textures.StringMap.t ref =
+  ref Textures.StringMap.empty
+
+
+#+END_SRC
+
+이제 에셋을 가져올 관리할 코드를 작성한다.
+
+#+BEGIN_SRC
+
+
+let add_textures renderer assets pathname name =
+  match Tsdl_image.Image.load_texture renderer pathname with
+  | Ok texture ->
+      let asset = { texture = Some texture } in
+      assets := StringMap.add name asset !assets;
+      ()
+  | Error _ ->
+      Printf.printf "FAIL TO OPEN %s" name;
+      ()
+
+let clear_assets assets =
+  let asset_list = StringMap.bindings assets |> List.map snd in
+  List.iter
+    (fun asset ->
+      match asset with
+      | { texture = Some texture } ->
+          Sdl.destroy_texture texture;
+          ()
+      | _ -> ())
+    asset_list
+
+
+#+END_SRC
+
+지정한 경로로 파일 이름을 지정하면 맵에 해당하는 이미지를 읽어 텍스쳐로 등록하게된다.
+
+** 한글 조합 및 아스키 코드의 출력
+
+한글 조합형 코드는 UCS-2 기반의 코드를 기반으로 초중종성을 뽑아낸다. 먼저 UTF8 코드는 UCS-2 코드로 변환하는 함수를 작성한다.
+
+#+BEGIN_SRC
+
 
 let utf8_to_ucs2 (utf8_str : string) : int list =
   let rec utf8_to_chars str idx acc =
@@ -32,6 +100,12 @@ let utf8_to_ucs2 (utf8_str : string) : int list =
       utf8_to_chars str (idx + char_length) (ucs2_char :: acc)
   in
   utf8_to_chars utf8_str 0 []
+
+#+END_SRC
+
+다음으로 UCS-2 코드에서 한글코드의 시작점인 AC00를 기점으로 초,중,종성에 대한 코드를 뽑는다.
+
+#+BEGIN_SRC
 
 type han_johab = { cho : int; mid : int; jong : int }
 
@@ -96,6 +170,33 @@ let jaso_to_bul johab =
              else None);
         }
 
+#+END_SRC
+
+비트맵 폰트를 보면 알겠지만, 초,중,종성별로 각기 8종, 4종, 4종의 형태가 있다. 이는 종성, 중성 자소값의 조합에 따라 결정되는 것으로 자소와 벌의 값을 알면 폰트의 위치를 파악할 수 있다.
+
+아스키 문자는 가로 8개, 세로 16줄 형태로 구성되어있으며, 아스키코드는 0~127 까지이므로, 다음과 같이 위치를 판별할 수 있다.
+
+#+BEGIN_SRC
+
+let is_hangul charcode =
+  charcode >= 0xac00 && charcode <= 0xd7a3
+
+let is_ascii charcode =
+  charcode >= 0x0000 && charcode <= 0x007f
+                        
+
+let ascii_font_pos charcode =
+  let ascii_height = 16 in
+  let quo = charcode / ascii_height in
+  let rem = charcode mod ascii_height in
+  (quo, rem)
+
+#+END_SRC
+
+한글 폰트의 크기는 16x16 이며, 영문 폰트의 크기는 8x16 이다. 그러므로 다음과 같이 지정한 텍스쳐에 맞추어 문자를 출력하도록 한다.
+
+#+BEGIN_SRC
+
 
 let draw_hangul renderer texture charcode x y =
   let han_width = 16 in
@@ -133,21 +234,6 @@ let draw_hangul renderer texture charcode x y =
   ()
 
 
-let is_hangul charcode =
-  charcode >= 0xac00 && charcode <= 0xd7a3
-
-let is_ascii charcode =
-  charcode >= 0x0000 && charcode <= 0x007f
-                        
-
-
-
-let ascii_font_pos charcode =
-  let ascii_height = 16 in
-  let quo = charcode / ascii_height in
-  let rem = charcode mod ascii_height in
-  (quo, rem)
-
 let draw_ascii renderer texture charcode x y =
   let ascii_width = 8 in
   let ascii_height = 16 in
@@ -157,18 +243,13 @@ let draw_ascii renderer texture charcode x y =
   ignore (Sdl.render_copy_ex ~src:src_rect ~dst:dst_rect renderer texture 0.0 None Sdl.Flip.none)
 
 
-let draw_hangul_string renderer textures charcodes x y =
-  let han_width = 16 in
-  List.iteri (fun idx charcode ->
-      draw_hangul renderer textures charcode (x + idx * han_width) y
-    ) charcodes
-    
 
-let draw_ascii_string renderer textures charcodes x y =
-  let ascii_width = 8 in
-  List.iteri (fun idx charcode ->
-      draw_ascii renderer textures charcode (x + idx * ascii_width) y
-    ) charcodes
+#+END_SRC
+
+이제 한글, 아스키에맞추어서 필요한 비트맵 폰트를 출력하면 된다.
+
+#+BEGIN_SRC
+
 
 let draw_string renderer ascii_texture hangul_texture charcodes x y =
   let han_width = 16 in
@@ -186,3 +267,43 @@ let draw_string renderer ascii_texture hangul_texture charcodes x y =
           new_x := !new_x + ascii_width
         end
     ) charcodes
+
+  
+#+END_SRC
+
+** 실제 코드에서의 사용
+
+우선 필요한 애셋을 읽어들인다.
+
+#+BEGIN_SRC
+
+              Tsdl_dino.Textures.add_textures r Tsdl_dino.Globals.assets
+                "assets/hangul.png" "hangul";
+              Tsdl_dino.Textures.add_textures r Tsdl_dino.Globals.assets
+                "assets/ascii.png" "ascii";
+  
+#+END_SRC
+
+해당 에셋을 읽어들였다면, 아스키와 한글을 출력할 애셋을 확인하고, 이에 따라 출력하도록 한다.
+
+#+BEGIN_SRC
+
+                let ascii_asset =
+                  Tsdl_dino.Textures.StringMap.find "ascii"
+                    !Tsdl_dino.Globals.assets
+                in
+                let hangul_asset =
+                  Tsdl_dino.Textures.StringMap.find "hangul"
+                    !Tsdl_dino.Globals.assets
+                in
+                begin
+                  (match ascii_asset, hangul_asset with
+                   | { texture = Some ascii_texture}, {texture = Some hangul_texture} ->
+                     Tsdl_dino.Bitmap_font.draw_string r ascii_texture hangul_texture (Tsdl_dino.Bitmap_font.utf8_to_ucs2 "안녕하세요? 한국... Hello World") 20 140
+                   | _ -> ()
+                  );
+
+                end;  
+  
+#+END_SRC
+
