@@ -119,37 +119,29 @@ module System2D = struct
             (match Hashtbl.find_opt Event.Event.hold_key Event.Event.W with
             | Some 1 ->
                 new_transform :=
-                  {
-                    !new_transform with dy = !new_transform.dy -. 1.0
-                  };
+                  { !new_transform with dy = !new_transform.dy -. 1.0 };
                 ()
             | _ -> ());
             (match Hashtbl.find_opt Event.Event.hold_key Event.Event.S with
             | Some 1 ->
                 new_transform :=
-                  {
-                    !new_transform with dy = !new_transform.dy +. 1.0
-                  };
+                  { !new_transform with dy = !new_transform.dy +. 1.0 };
                 ()
             | _ -> ());
 
             (match Hashtbl.find_opt Event.Event.hold_key Event.Event.A with
             | Some 1 ->
                 new_transform :=
-                  {
-                    !new_transform with dx = !new_transform.dx -. 1.0
-                  };
+                  { !new_transform with dx = !new_transform.dx -. 1.0 };
                 ()
             | _ -> ());
             (match Hashtbl.find_opt Event.Event.hold_key Event.Event.D with
             | Some 1 ->
                 new_transform :=
-                  {
-                    !new_transform with dx = !new_transform.dx +. 1.0
-                  };
+                  { !new_transform with dx = !new_transform.dx +. 1.0 };
                 ()
             | _ -> ());
-            
+
             Entities.update_transform entities id !new_transform
         | _, _ -> ())
       entity_list

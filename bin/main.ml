@@ -79,8 +79,9 @@ let main () =
                 in
                 (match hangul_asset with
                 | { texture = Some texture } ->
-                  Tsdl_dino.Bitmap_font.draw_hangul_string r texture (Tsdl_dino.Bitmap_font.utf8_to_ucs2 "안녕하세요") 20 120
-                  
+                    Tsdl_dino.Bitmap_font.draw_hangul_string r texture
+                      (Tsdl_dino.Bitmap_font.utf8_to_ucs2 "안녕하세요")
+                      20 120
                 | _ -> ());
                 Tsdl_dino.Setup.GameMap.render entities r;
                 Sdl.render_present r;
