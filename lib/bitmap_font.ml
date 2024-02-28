@@ -138,9 +138,56 @@ let draw_hangul renderer texture charcode x y =
        Sdl.Flip.none);
   ()
 
+let is_hangul charcode =
+  charcode >= 0xac00 && charcode <= 0xd7a3
+
+let is_ascii charcode =
+  charcode >= 0x0000 && charcode <= 0x007f
+                        
+
+
+
+let ascii_font_pos charcode =
+  let ascii_height = 16 in
+  let quo = charcode / ascii_height in
+  let rem = charcode mod ascii_height in
+  (quo, rem)
+
+let draw_ascii renderer texture charcode x y =
+  let ascii_width = 8 in
+  let ascii_height = 16 in
+  let asc_row, asc_col = ascii_font_pos charcode in
+  let src_rect = Sdl.Rect.create ~x:(asc_col * ascii_width) ~y:(asc_row * ascii_height) ~w:ascii_width ~h:ascii_height in
+  let dst_rect = Sdl.Rect.create ~x:x ~y:y ~w:ascii_width ~h:ascii_height in
+  ignore (Sdl.render_copy_ex ~src:src_rect ~dst:dst_rect renderer texture 0.0 None Sdl.Flip.none)
+
+
 let draw_hangul_string renderer textures charcodes x y =
   let han_width = 16 in
-  List.iteri
-    (fun idx charcode ->
-      draw_hangul renderer textures charcode (x + (idx * han_width)) y)
-    charcodes
+  List.iteri (fun idx charcode ->
+      draw_hangul renderer textures charcode (x + idx * han_width) y
+    ) charcodes
+    
+
+let draw_ascii_string renderer textures charcodes x y =
+  let ascii_width = 8 in
+  List.iteri (fun idx charcode ->
+      draw_ascii renderer textures charcode (x + idx * ascii_width) y
+    ) charcodes
+
+let draw_string renderer ascii_texture hangul_texture charcodes x y =
+  let han_width = 16 in
+  let ascii_width = 8 in
+  let new_x = ref x in
+  List.iter (fun charcode ->
+      if is_hangul charcode then
+        begin
+          draw_hangul renderer hangul_texture charcode !new_x y;
+          new_x := !new_x + han_width
+        end
+      else
+        begin
+          draw_ascii renderer ascii_texture charcode !new_x y;
+          new_x := !new_x + ascii_width
+        end
+    ) charcodes
