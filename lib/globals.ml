@@ -1,5 +1,3 @@
-open Setup
-
 let mini_map =
   [
     [ 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1 ];
@@ -12,10 +10,3 @@ let mini_map =
   ]
 
 (** Do Nothing *)
-let entities : Ecs.entity Ecs.IntMap.t ref = ref Ecs.IntMap.empty
-
-let map_info : Setup.tmap ref =
-  ref { map_width = 0; map_height = 0; map_list = [] }
-
-let assets : Textures.tassets Textures.StringMap.t ref =
-  ref Textures.StringMap.empty

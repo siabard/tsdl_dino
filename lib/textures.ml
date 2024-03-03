@@ -4,22 +4,36 @@
 
 open Tsdl
 open Result
-module StringMap = Map.Make (String)
 
 type tassets = { texture : Sdl.texture option }
 
-let add_textures renderer assets pathname name =
+type ttexture = {
+  asset_name : string;
+  texture_name : string;
+  x : float;
+  y : float;
+  w : float;
+  h : float;
+}
+
+let assets : tassets Custom_types.StringMap.t ref =
+  ref Custom_types.StringMap.empty
+
+let textures : ttexture Custom_types.StringMap.t ref =
+  ref Custom_types.StringMap.empty
+
+let load_asset renderer assets pathname name =
   match Tsdl_image.Image.load_texture renderer pathname with
   | Ok texture ->
       let asset = { texture = Some texture } in
-      assets := StringMap.add name asset !assets;
+      assets := Custom_types.StringMap.add name asset !assets;
       ()
   | Error _ ->
       Printf.printf "FAIL TO OPEN %s" name;
       ()
 
 let clear_assets assets =
-  let asset_list = StringMap.bindings assets |> List.map snd in
+  let asset_list = Custom_types.StringMap.bindings assets |> List.map snd in
   List.iter
     (fun asset ->
       match asset with
@@ -28,3 +42,9 @@ let clear_assets assets =
           ()
       | _ -> ())
     asset_list
+
+let add_texture textures asset_name texture_name x y w h =
+  textures :=
+    Custom_types.StringMap.add texture_name
+      { asset_name; texture_name; x; y; w; h }
+      !textures

@@ -7,8 +7,8 @@ let main () =
   let map_height = List.length mini_map in
   let map_width = List.(length (hd mini_map)) in
   let map_list = List.flatten mini_map in
-  let map_info = Tsdl_dino.Globals.map_info in
-  let entities = Tsdl_dino.Globals.entities in
+  let map_info = Tsdl_dino.Game_map.map_info in
+  let entities = Tsdl_dino.Ecs.entities in
   match Sdl.init Sdl.Init.(video + events) with
   | Error (`Msg e) ->
       Sdl.log "Init error: %s" e;
@@ -20,8 +20,8 @@ let main () =
       let event = Sdl.Event.create () in
       let some_event = Some event in
       match
-        Sdl.create_window ~w:Tsdl_dino.Setup.window_width
-          ~h:Tsdl_dino.Setup.window_height "SDL OpenGL"
+        Sdl.create_window ~w:Tsdl_dino.Game_map.window_width
+          ~h:Tsdl_dino.Game_map.window_height "SDL OpenGL"
           Sdl.Window.(shown + opengl)
       with
       | Error (`Msg e) ->
@@ -38,14 +38,18 @@ let main () =
               exit 1
           | Ok r ->
               ignore (Sdl.set_hint Sdl.Hint.render_scale_quality "linear");
-              Tsdl_dino.Setup.GameMap.set_map map_info
+              Tsdl_dino.Game_map.GameMap.set_map map_info
                 { map_width; map_height; map_list };
-              Tsdl_dino.Textures.add_textures r Tsdl_dino.Globals.assets
+              Tsdl_dino.Textures.load_asset r Tsdl_dino.Textures.assets
                 "assets/hangul.png" "hangul";
-              Tsdl_dino.Textures.add_textures r Tsdl_dino.Globals.assets
+              Tsdl_dino.Textures.load_asset r Tsdl_dino.Textures.assets
                 "assets/ascii.png" "ascii";
-              Tsdl_dino.Setup.GameMap.get_map entities map_info;
-              Tsdl_dino.Setup.GameMap.set_player entities;
+              Tsdl_dino.Textures.load_asset r Tsdl_dino.Textures.assets
+                "assets/mychar.png" "char";
+              Tsdl_dino.Textures.add_texture Tsdl_dino.Textures.textures "char"
+                "MYCHAR" 0.0 0.0 16.0 16.0;
+              Tsdl_dino.Game_map.GameMap.get_map entities map_info;
+              Tsdl_dino.Game_map.GameMap.set_player entities;
               let rec game_loop () =
                 ignore (Tsdl_dino.Event.Event.clear_key ());
                 last_tick := !current_tick;
@@ -55,7 +59,7 @@ let main () =
                 in
                 (match event with
                 | Event.Quit ->
-                    Tsdl_dino.Textures.clear_assets !Tsdl_dino.Globals.assets;
+                    Tsdl_dino.Textures.clear_assets !Tsdl_dino.Textures.assets;
                     Sdl.destroy_renderer r;
                     Sdl.destroy_window w;
                     Image.quit ();
@@ -70,27 +74,29 @@ let main () =
                       Hashtbl.remove Event.hold_key key)
                 | _ -> ());
 
-                Tsdl_dino.Setup.GameMap.update entities;
+                Tsdl_dino.Game_map.GameMap.update entities;
                 ignore (Sdl.set_render_draw_color r 0x10 0x10 0x10 0xff);
                 ignore (Sdl.render_clear r);
                 ignore (Sdl.set_render_draw_color r 0xff 0xff 0xff 0xff);
                 let ascii_asset =
-                  Tsdl_dino.Textures.StringMap.find "ascii"
-                    !Tsdl_dino.Globals.assets
+                  Tsdl_dino.Custom_types.StringMap.find "ascii"
+                    !Tsdl_dino.Textures.assets
                 in
                 let hangul_asset =
-                  Tsdl_dino.Textures.StringMap.find "hangul"
-                    !Tsdl_dino.Globals.assets
+                  Tsdl_dino.Custom_types.StringMap.find "hangul"
+                    !Tsdl_dino.Textures.assets
                 in
-                begin
-                  (match ascii_asset, hangul_asset with
-                   | { texture = Some ascii_texture}, {texture = Some hangul_texture} ->
-                     Tsdl_dino.Bitmap_font.draw_string r ascii_texture hangul_texture (Tsdl_dino.Bitmap_font.utf8_to_ucs2 "안녕하세요? 한국... Hello World") 20 140
-                   | _ -> ()
-                  );
+                (match (ascii_asset, hangul_asset) with
+                | ( { texture = Some ascii_texture },
+                    { texture = Some hangul_texture } ) ->
+                    Tsdl_dino.Bitmap_font.draw_string r ascii_texture
+                      hangul_texture
+                      (Tsdl_dino.Bitmap_font.utf8_to_ucs2
+                         "안녕하세요? 한국... Hello World")
+                      20 140
+                | _ -> ());
 
-                end;
-                Tsdl_dino.Setup.GameMap.render entities r;
+                Tsdl_dino.Game_map.GameMap.render entities r;
                 Sdl.render_present r;
                 current_tick := Sdl.get_ticks ();
                 let dt = Int32.sub !current_tick !last_tick in

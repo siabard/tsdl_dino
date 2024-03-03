@@ -7,6 +7,8 @@ let player_rot_speed = 0.002
 
 type tmap = { map_width : int; map_height : int; map_list : int list }
 
+let map_info = ref { map_width = 0; map_height = 0; map_list = [] }
+
 module GameMap = struct
   type t = tmap
 
@@ -49,11 +51,13 @@ module GameMap = struct
     Ecs.Entities.update_shape entities new_entity.id shape;
     Ecs.Entities.update_cinput entities new_entity.id cinput;
     Ecs.Entities.update_transform entities new_entity.id transform;
+    Ecs.Entities.update_animation entities new_entity.id [ "MYCHAR" ] true;
     ()
 
   let update entities =
-    Ecs.System2D.update_input entities;
-    Ecs.System2D.update_pos entities
+    System2d.update_input entities;
+    System2d.update_pos entities;
+    System2d.remove_entities entities
 
-  let render entities renderer = Ecs.System2D.render entities renderer
+  let render entities renderer = System2d.render entities renderer
 end
