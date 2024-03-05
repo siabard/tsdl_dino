@@ -32,8 +32,6 @@ type entity = {
   animation : animation_component option;
 }
 
-let entities : entity Custom_types.IntMap.t ref = ref Custom_types.IntMap.empty
-
 module Entities = struct
   type t = entity
 

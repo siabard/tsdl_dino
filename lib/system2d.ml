@@ -69,7 +69,7 @@ let remove_entities entities =
       else ())
     entity_list
 
-let render entities renderer =
+let render entities assets textures renderer =
   let entity_list = Ecs.Entities.get_list entities in
   List.iter
     (fun ele ->
@@ -81,10 +81,8 @@ let render entities renderer =
             Sdl.Rect.create ~x:(int_of_float x) ~y:(int_of_float y)
               ~w:(int_of_float width) ~h:(int_of_float height)
           in
-          let texture = Custom_types.StringMap.find frame !Textures.textures in
-          let asset =
-            Custom_types.StringMap.find texture.asset_name !Textures.assets
-          in
+          let texture = Custom_types.StringMap.find frame !textures in
+          let asset = Custom_types.StringMap.find texture.asset_name !assets in
           let sdl_rect =
             Sdl.Rect.create ~x:(int_of_float texture.x)
               ~y:(int_of_float texture.y) ~w:(int_of_float texture.w)

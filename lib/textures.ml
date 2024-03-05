@@ -16,12 +16,6 @@ type ttexture = {
   h : float;
 }
 
-let assets : tassets Custom_types.StringMap.t ref =
-  ref Custom_types.StringMap.empty
-
-let textures : ttexture Custom_types.StringMap.t ref =
-  ref Custom_types.StringMap.empty
-
 let load_asset renderer assets pathname name =
   match Tsdl_image.Image.load_texture renderer pathname with
   | Ok texture ->

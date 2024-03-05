@@ -8,7 +8,9 @@ let main () =
   let map_width = List.(length (hd mini_map)) in
   let map_list = List.flatten mini_map in
   let map_info = Tsdl_dino.Game_map.map_info in
-  let entities = Tsdl_dino.Ecs.entities in
+  let entities = ref Tsdl_dino.Custom_types.IntMap.empty in
+  let assets = ref Tsdl_dino.Custom_types.StringMap.empty in
+  let textures = ref Tsdl_dino.Custom_types.StringMap.empty in
   match Sdl.init Sdl.Init.(video + events) with
   | Error (`Msg e) ->
       Sdl.log "Init error: %s" e;
@@ -40,14 +42,12 @@ let main () =
               ignore (Sdl.set_hint Sdl.Hint.render_scale_quality "linear");
               Tsdl_dino.Game_map.GameMap.set_map map_info
                 { map_width; map_height; map_list };
-              Tsdl_dino.Textures.load_asset r Tsdl_dino.Textures.assets
-                "assets/hangul.png" "hangul";
-              Tsdl_dino.Textures.load_asset r Tsdl_dino.Textures.assets
-                "assets/ascii.png" "ascii";
-              Tsdl_dino.Textures.load_asset r Tsdl_dino.Textures.assets
-                "assets/mychar.png" "char";
-              Tsdl_dino.Textures.add_texture Tsdl_dino.Textures.textures "char"
-                "MYCHAR" 0.0 0.0 16.0 16.0;
+              Tsdl_dino.Textures.load_asset r assets "assets/hangul.png"
+                "hangul";
+              Tsdl_dino.Textures.load_asset r assets "assets/ascii.png" "ascii";
+              Tsdl_dino.Textures.load_asset r assets "assets/mychar.png" "char";
+              Tsdl_dino.Textures.add_texture textures "char" "MYCHAR" 0.0 0.0
+                16.0 16.0;
               Tsdl_dino.Game_map.GameMap.get_map entities map_info;
               Tsdl_dino.Game_map.GameMap.set_player entities;
               let rec game_loop () =
@@ -59,7 +59,7 @@ let main () =
                 in
                 (match event with
                 | Event.Quit ->
-                    Tsdl_dino.Textures.clear_assets !Tsdl_dino.Textures.assets;
+                    Tsdl_dino.Textures.clear_assets !assets;
                     Sdl.destroy_renderer r;
                     Sdl.destroy_window w;
                     Image.quit ();
@@ -79,12 +79,10 @@ let main () =
                 ignore (Sdl.render_clear r);
                 ignore (Sdl.set_render_draw_color r 0xff 0xff 0xff 0xff);
                 let ascii_asset =
-                  Tsdl_dino.Custom_types.StringMap.find "ascii"
-                    !Tsdl_dino.Textures.assets
+                  Tsdl_dino.Custom_types.StringMap.find "ascii" !assets
                 in
                 let hangul_asset =
-                  Tsdl_dino.Custom_types.StringMap.find "hangul"
-                    !Tsdl_dino.Textures.assets
+                  Tsdl_dino.Custom_types.StringMap.find "hangul" !assets
                 in
                 (match (ascii_asset, hangul_asset) with
                 | ( { texture = Some ascii_texture },
@@ -96,7 +94,7 @@ let main () =
                       20 140
                 | _ -> ());
 
-                Tsdl_dino.Game_map.GameMap.render entities r;
+                Tsdl_dino.Game_map.GameMap.render entities assets textures r;
                 Sdl.render_present r;
                 current_tick := Sdl.get_ticks ();
                 let dt = Int32.sub !current_tick !last_tick in
