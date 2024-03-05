@@ -107,7 +107,7 @@ module Entities = struct
     match comp with
     | Position -> List.filter (fun ele -> ele.pos <> None) entity_list
     | Shape -> List.filter (fun ele -> ele.shape <> None) entity_list
-    | Input -> List.filter (fun ele -> ele.cinput > None) entity_list
+    | Input -> List.filter (fun ele -> ele.cinput <> None) entity_list
 
   let update_animation entities id frames repeatable =
     match Custom_types.IntMap.find_opt id !entities with
