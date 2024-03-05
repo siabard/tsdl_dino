@@ -3,7 +3,17 @@ open Tsdl_image
 module Event = Tsdl_dino.Event.Event
 
 let main () =
-  let mini_map = Tsdl_dino.Globals.mini_map in
+  let mini_map =
+    [
+      [ 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1 ];
+      [ 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1 ];
+      [ 1; 0; 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1 ];
+      [ 1; 0; 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1; 0; 0; 1 ];
+      [ 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1; 0; 0; 1 ];
+      [ 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 1 ];
+      [ 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1 ];
+    ]
+  in
   let map_height = List.length mini_map in
   let map_width = List.(length (hd mini_map)) in
   let map_list = List.flatten mini_map in
