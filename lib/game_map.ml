@@ -7,10 +7,10 @@ let player_rot_speed = 0.002
 
 type tmap = { map_width : int; map_height : int; map_list : int list }
 
-let map_info = ref { map_width = 0; map_height = 0; map_list = [] }
-
 module GameMap = struct
   type t = tmap
+
+  let mk () = { map_width = 0; map_height = 0; map_list = [] }
 
   let set_map map_info lmap =
     map_info :=

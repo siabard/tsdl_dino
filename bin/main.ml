@@ -7,7 +7,7 @@ let main () =
   let map_height = List.length mini_map in
   let map_width = List.(length (hd mini_map)) in
   let map_list = List.flatten mini_map in
-  let map_info = Tsdl_dino.Game_map.map_info in
+  let map_info = ref (Tsdl_dino.Game_map.GameMap.mk ()) in
   let entities = Tsdl_dino.Ecs.entities in
   match Sdl.init Sdl.Init.(video + events) with
   | Error (`Msg e) ->
