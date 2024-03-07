@@ -59,5 +59,6 @@ module GameMap = struct
     System2d.update_pos entities;
     System2d.remove_entities entities
 
-  let render entities renderer = System2d.render entities renderer
+  let render entities assets textures renderer =
+    System2d.render entities assets textures renderer
 end
