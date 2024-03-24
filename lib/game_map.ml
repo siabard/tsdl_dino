@@ -54,6 +54,36 @@ module GameMap = struct
     Ecs.Entities.update_animation entities new_entity.id [ "MYCHAR" ] true;
     ()
 
+  let make_panel ?(pos : Ecs.position_component = { x = 0.0; y = 0.0 })
+      ?(shape : Ecs.shape_component = { width = 0.0; height = 0.0 })
+      ?(panel : Ecs.panel_component = { border = 0.0 })
+      ?(text : Ecs.text_component =
+        {
+          ascii_texture = { texture = None };
+          hangul_texture = { texture = None };
+          text = "";
+          padding = 0.0;
+        })
+      ?(animation : Ecs.animation_component =
+        { frames = []; current_frame = 0; repeatable = false; current_time = 0 })
+      entities =
+    let new_entity = Ecs.Entities.add_entity entities "panel" in
+    match Custom_types.IntMap.find_opt new_entity.id !entities with
+    | Some e ->
+        let new_entity =
+          {
+            e with
+            pos = Some pos;
+            panel = Some panel;
+            text = Some text;
+            shape = Some shape;
+            animation = Some animation;
+          }
+        in
+        entities := Custom_types.IntMap.add new_entity.id new_entity !entities;
+        ()
+    | None -> ()
+
   let update entities =
     System2d.update_input entities;
     System2d.update_pos entities;

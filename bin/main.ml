@@ -56,10 +56,31 @@ let main () =
                 "hangul";
               Tsdl_dino.Textures.load_asset r assets "assets/ascii.png" "ascii";
               Tsdl_dino.Textures.load_asset r assets "assets/mychar.png" "char";
+              Tsdl_dino.Textures.load_asset r assets "assets/panel.png" "panel";
               Tsdl_dino.Textures.add_texture textures "char" "MYCHAR" 0.0 0.0
                 16.0 16.0;
+              Tsdl_dino.Textures.add_texture textures "panel" "PANEL" 0.0 0.0
+                9.0 9.0;
               Tsdl_dino.Game_map.GameMap.get_map entities map_info;
               Tsdl_dino.Game_map.GameMap.set_player entities;
+              let ascii_asset =
+                Tsdl_dino.Custom_types.StringMap.find "ascii" !assets
+              in
+              let hangul_asset =
+                Tsdl_dino.Custom_types.StringMap.find "hangul" !assets
+              in
+              Tsdl_dino.Game_map.GameMap.make_panel ~pos:{ x = 50.0; y = 50.0 }
+                ~shape:{ width = 100.0; height = 100.0 }
+                ~panel:{ border = 3.0 }
+                ~text:
+                  {
+                    padding = 3.0;
+                    ascii_texture = ascii_asset;
+                    hangul_texture = hangul_asset;
+                    text = "안녕하세요";
+                  }
+                entities;
+
               let rec game_loop () =
                 ignore (Tsdl_dino.Event.Event.clear_key ());
                 last_tick := !current_tick;

@@ -5,6 +5,15 @@ type shape_component = { width : float; height : float }
 type rotation_component = { speed : float; angle : float }
 type input_component = { enabled : bool }
 
+type text_component = {
+  ascii_texture : Textures.tassets;
+  hangul_texture : Textures.tassets;
+  text : string;
+  padding : float;
+}
+
+type panel_component = { border : float }
+
 type animation_component = {
   frames : string list;
   current_frame : int;
@@ -30,6 +39,8 @@ type entity = {
   cinput : input_component option;
   collider : collision_component option;
   animation : animation_component option;
+  panel : panel_component option;
+  text : text_component option;
 }
 
 module Entities = struct
@@ -51,6 +62,8 @@ module Entities = struct
         cinput = None;
         collider = None;
         animation = None;
+        panel = None;
+        text = None;
       }
     in
     entities := Custom_types.IntMap.add !unique_id new_entity !entities;

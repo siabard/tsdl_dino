@@ -73,9 +73,146 @@ let render entities assets textures renderer =
   let entity_list = Ecs.Entities.get_list entities in
   List.iter
     (fun ele ->
-      match (ele.pos, ele.shape, ele.animation) with
-      | Some { x; y }, Some { width; height }, Some { frames; current_frame; _ }
-        ->
+      match (ele.pos, ele.shape, ele.animation, ele.panel, ele.text) with
+      | ( Some { x; y },
+          Some { width; height },
+          Some { frames = _; current_frame = _; _ },
+          Some { border },
+          Some { text; padding; _ } ) ->
+          let rect_tl =
+            Sdl.Rect.create ~x:(int_of_float x) ~y:(int_of_float y)
+              ~w:(int_of_float border) ~h:(int_of_float border)
+          in
+          let rect_tm =
+            Sdl.Rect.create
+              ~x:(int_of_float (x +. border))
+              ~y:(int_of_float y)
+              ~w:(int_of_float (width -. (border *. 2.0)))
+              ~h:(int_of_float border)
+          in
+          let rect_tr =
+            Sdl.Rect.create
+              ~x:(int_of_float (x +. width -. (border *. 2.0)))
+              ~y:(int_of_float y) ~w:(int_of_float border)
+              ~h:(int_of_float border)
+          in
+          let rect_ml =
+            Sdl.Rect.create ~x:(int_of_float x)
+              ~y:(int_of_float (y +. border))
+              ~w:(int_of_float border)
+              ~h:(int_of_float (height -. (border *. 2.0)))
+          in
+          let rect_mm =
+            Sdl.Rect.create
+              ~x:(int_of_float (x +. border))
+              ~y:(int_of_float (y +. border))
+              ~w:(int_of_float (width -. (border *. 2.0)))
+              ~h:(int_of_float (height -. (border *. 2.0)))
+          in
+          let rect_mr =
+            Sdl.Rect.create
+              ~x:(int_of_float (x +. width -. (border *. 2.0)))
+              ~y:(int_of_float (y +. border))
+              ~w:(int_of_float border)
+              ~h:(int_of_float (height -. (border *. 2.0)))
+          in
+          let rect_bl =
+            Sdl.Rect.create ~x:(int_of_float x)
+              ~y:(int_of_float (y +. height -. (border *. 2.0)))
+              ~w:(int_of_float border) ~h:(int_of_float border)
+          in
+          let rect_bm =
+            Sdl.Rect.create
+              ~x:(int_of_float (x +. border))
+              ~y:(int_of_float (y +. height -. (border *. 2.0)))
+              ~w:(int_of_float (width -. (border *. 2.0)))
+              ~h:(int_of_float border)
+          in
+          let rect_br =
+            Sdl.Rect.create
+              ~x:(int_of_float (x +. width -. (border *. 2.0)))
+              ~y:(int_of_float (y +. height -. (border *. 2.0)))
+              ~w:(int_of_float border) ~h:(int_of_float border)
+          in
+          let ascii_asset = Custom_types.StringMap.find "ascii" !assets in
+          let hangul_asset = Custom_types.StringMap.find "hangul" !assets in
+          let asset = Custom_types.StringMap.find "panel" !assets in
+          (match (ascii_asset.texture, hangul_asset.texture, asset.texture) with
+          | Some ascii_texture, Some hangul_texture, Some asset_texure ->
+              ignore
+                (Sdl.render_copy_ex
+                   ~src:
+                     (Sdl.Rect.create ~x:0 ~y:0 ~w:(int_of_float border)
+                        ~h:(int_of_float border))
+                   ~dst:rect_tl renderer asset_texure 0.0 None Sdl.Flip.none);
+              ignore
+                (Sdl.render_copy_ex
+                   ~src:
+                     (Sdl.Rect.create ~x:(int_of_float border) ~y:0
+                        ~w:(int_of_float border) ~h:(int_of_float border))
+                   ~dst:rect_tm renderer asset_texure 0.0 None Sdl.Flip.none);
+              ignore
+                (Sdl.render_copy_ex
+                   ~src:
+                     (Sdl.Rect.create
+                        ~x:(int_of_float border * 2)
+                        ~y:0 ~w:(int_of_float border) ~h:(int_of_float border))
+                   ~dst:rect_tr renderer asset_texure 0.0 None Sdl.Flip.none);
+              ignore
+                (Sdl.render_copy_ex
+                   ~src:
+                     (Sdl.Rect.create ~x:0 ~y:(int_of_float border)
+                        ~w:(int_of_float border) ~h:(int_of_float border))
+                   ~dst:rect_ml renderer asset_texure 0.0 None Sdl.Flip.none);
+              ignore
+                (Sdl.render_copy_ex
+                   ~src:
+                     (Sdl.Rect.create ~x:(int_of_float border)
+                        ~y:(int_of_float border) ~w:(int_of_float border)
+                        ~h:(int_of_float border))
+                   ~dst:rect_mm renderer asset_texure 0.0 None Sdl.Flip.none);
+              ignore
+                (Sdl.render_copy_ex
+                   ~src:
+                     (Sdl.Rect.create
+                        ~x:(int_of_float border * 2)
+                        ~y:(int_of_float border) ~w:(int_of_float border)
+                        ~h:(int_of_float border))
+                   ~dst:rect_mr renderer asset_texure 0.0 None Sdl.Flip.none);
+              ignore
+                (Sdl.render_copy_ex
+                   ~src:
+                     (Sdl.Rect.create ~x:0
+                        ~y:(int_of_float border * 2)
+                        ~w:(int_of_float border) ~h:(int_of_float border))
+                   ~dst:rect_bl renderer asset_texure 0.0 None Sdl.Flip.none);
+              ignore
+                (Sdl.render_copy_ex
+                   ~src:
+                     (Sdl.Rect.create ~x:(int_of_float border)
+                        ~y:(int_of_float border * 2)
+                        ~w:(int_of_float border) ~h:(int_of_float border))
+                   ~dst:rect_bm renderer asset_texure 0.0 None Sdl.Flip.none);
+              ignore
+                (Sdl.render_copy_ex
+                   ~src:
+                     (Sdl.Rect.create
+                        ~x:(int_of_float border * 2)
+                        ~y:(int_of_float border * 2)
+                        ~w:(int_of_float border) ~h:(int_of_float border))
+                   ~dst:rect_br renderer asset_texure 0.0 None Sdl.Flip.none);
+              ignore
+                (Bitmap_font.draw_string renderer ascii_texture hangul_texture
+                   (Bitmap_font.utf8_to_ucs2 text)
+                   (int_of_float (x +. padding))
+                   (int_of_float (y +. padding)))
+          | _ -> ());
+          ()
+      | ( Some { x; y },
+          Some { width; height },
+          Some { frames; current_frame; _ },
+          _,
+          _ ) ->
           let frame = List.nth frames current_frame in
           let rect =
             Sdl.Rect.create ~x:(int_of_float x) ~y:(int_of_float y)
@@ -99,12 +236,12 @@ let render entities assets textures renderer =
             | None -> ()
           in
           ()
-      | Some { x; y }, Some { width; height }, None ->
+      | Some { x; y }, Some { width; height }, _, _, _ ->
           let rect =
             Sdl.Rect.create ~x:(int_of_float x) ~y:(int_of_float y)
               ~w:(int_of_float width) ~h:(int_of_float height)
           in
           let _ = Sdl.render_draw_rect renderer (Some rect) in
           ()
-      | _, _, _ -> ())
+      | _, _, _, _, _ -> ())
     entity_list
