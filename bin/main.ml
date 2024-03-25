@@ -79,6 +79,13 @@ let main () =
                     hangul_texture = hangul_asset;
                     text = "안녕하세요";
                   }
+                ~animation:
+                  {
+                    frames = [ "PANEL" ];
+                    current_frame = 0;
+                    repeatable = false;
+                    current_time = 0;
+                  }
                 entities;
 
               let rec game_loop () =

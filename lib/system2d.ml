@@ -76,7 +76,7 @@ let render entities assets textures renderer =
       match (ele.pos, ele.shape, ele.animation, ele.panel, ele.text) with
       | ( Some { x; y },
           Some { width; height },
-          Some { frames = _; current_frame = _; _ },
+          Some { frames; current_frame; _ },
           Some { border },
           Some { text; padding; _ } ) ->
           let rect_tl =
@@ -136,7 +136,9 @@ let render entities assets textures renderer =
           in
           let ascii_asset = Custom_types.StringMap.find "ascii" !assets in
           let hangul_asset = Custom_types.StringMap.find "hangul" !assets in
-          let asset = Custom_types.StringMap.find "panel" !assets in
+          let frame = List.nth frames current_frame in
+          let texture = Custom_types.StringMap.find frame !textures in
+          let asset = Custom_types.StringMap.find texture.asset_name !assets in
           (match (ascii_asset.texture, hangul_asset.texture, asset.texture) with
           | Some ascii_texture, Some hangul_texture, Some asset_texure ->
               ignore
